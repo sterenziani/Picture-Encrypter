@@ -11,14 +11,17 @@ typedef struct args{
 	enum mode selected_mode;
 	image_t image;
 	int k;
+	int n;
 	char* dir_name;
 	DIR* dir;
+	image_t* pictures;
 } args_t;
 
 int parse_args(int argc, char* argv[], args_t* args)
 {
 	args->dir = NULL;
 	args->image.file = NULL;
+	args->pictures = NULL;
 	if(argc != 5)
 	{
 		fprintf(stderr, "ERROR. Program expected 4 arguments, but received only %d.\n", argc-1);
@@ -41,6 +44,7 @@ int parse_args(int argc, char* argv[], args_t* args)
 	}
 
 	// ARG 2 - Original image file (Input if d, Output if r)
+	FILE* file;
 	switch (args->selected_mode)
 	{
 		case DISTRIBUTE:
@@ -53,7 +57,12 @@ int parse_args(int argc, char* argv[], args_t* args)
 			}
 			break;
 		case RECOVER:
-			printf("Work in progress. Should check that file doesn't exist so we don't overwrite it\n");
+		    if(file = fopen(argv[2], "r"))
+		    {
+				fprintf(stderr, "ERROR. File %s already exists. Please choose another filename to avoid overwriting it!\n", argv[2]);
+		        fclose(file);
+				return EXIT_FAILURE;
+		    }
 			break;
 		default:
 			printf("You shouldn't be here. How did you get here?!\n");
@@ -78,8 +87,9 @@ int parse_args(int argc, char* argv[], args_t* args)
 	args->dir = opendir(argv[4]);
 	if(args->dir)
 	{
-		// check same size and k of them
-		printf("IMPLEMENT ME! Check there's at least k images of the same size as the original image!\n");
+		args->n = collect_images(args->dir, args->dir_name, args->k, &(args->pictures));
+		if(args->k > args->n)
+			return EXIT_FAILURE;
 		return EXIT_SUCCESS;
 	}
 	else if (ENOENT == errno)
@@ -92,7 +102,6 @@ int parse_args(int argc, char* argv[], args_t* args)
 	    fprintf(stderr, "ERROR. Directory %s could not be opened.\n", argv[4]);
 		return EXIT_FAILURE;
 	}
-
 	return EXIT_SUCCESS;
 }
 
@@ -116,10 +125,29 @@ int main(int argc, char* argv[])
 		{
 			closedir(args.dir);
 		}
+		if(args.pictures != NULL)
+		{
+			free_picture_album(args.pictures, args.n);
+		}
 		return EXIT_FAILURE;
 	}
-	printf("Picture is %d x %d pixels, rounded up to %d x %d\n", args.image.real_width, args.image.height, args.image.width, args.image.height);
-	print_picture(args.image);
+	if(args.selected_mode == DISTRIBUTE)
+	{
+		// This is the extracted picture
+		printf("Picture is %d x %d pixels, rounded up to %d x %d\n", args.image.real_width, args.image.height, args.image.width, args.image.height);
+		print_picture(args.image);
+		printf("\n");
+	}
+	// These are the camouflage pictures
+	printf("These are the camouflage pictures located in %s\n", args.dir_name);
+	for(int i = 0; i < args.n; i++)
+	{
+		print_picture(args.pictures[i]);
+		printf("\n");
+	}
+
+	// CLEANUP
+	free_picture_album(args.pictures, args.n);
 	free(args.image.file);
 	closedir(args.dir);
 	return EXIT_SUCCESS;

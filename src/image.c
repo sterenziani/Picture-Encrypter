@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
+#include <string.h>
 #include "image.h"
 
 static int file_size(FILE* in, size_t* size)
@@ -94,4 +96,73 @@ void print_picture(image_t image)
 		}
 		printf("\n");
 	}
+}
+
+char* get_image_path(char* directory, char* filename)
+{
+    char* dest = (char*) calloc(strlen(directory)+strlen(filename)+2, sizeof(char));
+    strcat(dest, directory);
+    strcat(dest, "/");
+    strcat(dest, filename);
+    return dest;
+}
+
+uint8_t is_file_bmp(char* filename)
+{
+    return (!strcmp(filename+strlen(filename)-4, ".bmp"));
+}
+
+void free_picture_album(image_t* pictures, int size)
+{
+    for(int i = 0; i < size; i++)
+		free(pictures[i].file);
+	free(pictures);
+}
+
+// k is the min expected amount of pictures
+int collect_images(DIR* FD, char* dir_name, int k, image_t** pics)
+{
+    struct dirent* in_file;
+    image_t* pictures = calloc(MAX_CAMOUFLAGE_BUFFER, sizeof(image_t));
+    int image_count = 0;
+    while ((in_file = readdir(FD)))
+    {
+        if (!strcmp(in_file->d_name, ".") || !strcmp (in_file->d_name, ".."))
+            continue;
+        char* filename = get_image_path(dir_name, in_file->d_name);
+
+        // Only load image if it's a bitmap with the right format
+        if(is_file_bmp(filename))
+        {
+            pictures[image_count] = load_image(filename);
+            if(pictures[image_count].file != NULL)
+                image_count++;
+        }
+        free(filename);
+    }
+    // We have found image_count bitmaps. Let's check they're all the same size.
+    if(image_count < k)
+    {
+        fprintf(stderr, "ERROR. Expected to find at least %d images, but only found %d.\n", k, image_count);
+        free_picture_album(pictures, image_count);
+        return -1;
+    }
+    for(int i=1; i < image_count; i++)
+    {
+        if(pictures[i].real_width != pictures[0].real_width)
+        {
+            fprintf(stderr, "ERROR. One of the pictures has width %dpx while another one has width %dpx. Make sure all pictures in the directory have the same dimensions.\n", pictures[0].real_width, pictures[i].real_width);
+            free_picture_album(pictures, image_count);
+            return -1;
+        }
+        if(pictures[i].height != pictures[0].height)
+        {
+            fprintf(stderr, "ERROR. One of the pictures has height %dpx while another one has height %dpx.  Make sure all pictures in the directory have the same dimensions.\n", pictures[0].height, pictures[i].height);
+            free_picture_album(pictures, image_count);
+            return -1;
+        }
+    }
+    pictures = realloc(pictures, image_count*sizeof(image_t));
+    *pics = pictures;
+    return image_count;
 }
