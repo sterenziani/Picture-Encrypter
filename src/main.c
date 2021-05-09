@@ -90,6 +90,19 @@ int parse_args(int argc, char* argv[], args_t* args)
 		args->n = collect_images(args->dir, args->dir_name, args->k, &(args->pictures));
 		if(args->k > args->n)
 			return EXIT_FAILURE;
+		if(args->selected_mode == DISTRIBUTE)
+		{
+			if(args->image.real_width != args->pictures[0].real_width)
+			{
+				fprintf(stderr, "ERROR. Secret picture has width %dpx while camouflage pics have width %dpx. Make sure all pictures have the same dimensions.\n", args->image.real_width, args->pictures[0].real_width);
+				return EXIT_FAILURE;
+			}
+			if(args->image.height != args->pictures[0].height)
+			{
+				fprintf(stderr, "ERROR. Secret picture has height %dpx while camouflage pics have height %dpx. Make sure all pictures have the same dimensions.\n", args->image.height, args->pictures[0].height);
+				return EXIT_FAILURE;
+			}
+		}
 		return EXIT_SUCCESS;
 	}
 	else if (ENOENT == errno)
