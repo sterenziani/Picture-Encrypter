@@ -166,3 +166,25 @@ int collect_images(DIR* FD, char* dir_name, int k, image_t** pics)
     *pics = pictures;
     return image_count;
 }
+
+void save_file(image_t image)
+{
+    FILE* file = fopen(image.filename, "w");
+    fwrite(image.file, sizeof(uint8_t), read_little_endian_int(image.file+2), file);
+    fclose(file);
+}
+
+uint8_t** get_secret_blocks(image_t image, int k)
+{
+    int block_count = (image.height*image.width)/k;
+    uint8_t** blocks = calloc(block_count, sizeof(uint8_t*));
+    for(int j=0; j < block_count; j++)
+    {
+        blocks[j] = calloc(k, sizeof(uint8_t));
+        for(int i=0; i < k; i++)
+        {
+            blocks[j][i] = image.content[j*k + i];
+        }
+    }
+    return blocks;
+}
