@@ -147,6 +147,12 @@ int collect_images(DIR* FD, char* dir_name, int k, image_t** pics)
         free_picture_album(pictures, image_count);
         return -1;
     }
+    if(pictures[0].height % 2 != 0)
+    {
+        fprintf(stderr, "ERROR. Picture height must be an even number, but at least one camouflage picture is %dpx tall, which is an odd number.\n", pictures[0].height);
+        free_picture_album(pictures, image_count);
+        return -1;
+    }
     for(int i=1; i < image_count; i++)
     {
         if(pictures[i].real_width != pictures[0].real_width)
@@ -187,4 +193,30 @@ uint8_t** get_secret_blocks(image_t image, int k)
         }
     }
     return blocks;
+}
+
+uint8_t** get_xwvu_blocks(image_t image, int k)
+{
+    int block_count = (image.height*image.width)/k;
+    uint8_t** blocks = calloc(block_count, sizeof(uint8_t*));
+    for(int j=0; j < block_count; j++)
+    {
+        int x = (2*j % image.width);
+        int y = 2 * (2*j / image.width); // Keep the 2s separate, since a 4j/width could return an odd number, and we don't want that
+        int X_block = (image.height-1)*image.width + x - y*image.width;
+        blocks[j] = calloc(4, sizeof(uint8_t));
+        blocks[j][0] = image.content[X_block];
+        blocks[j][1] = image.content[X_block + 1];
+        blocks[j][2] = image.content[X_block - image.width];
+        blocks[j][3] = image.content[X_block - image.width + 1];
+    }
+    return blocks;
+}
+
+void free_xwvu_blocks(uint8_t** blocks, image_t image, int k)
+{
+    int block_count = (image.height*image.width)/k;
+    for(int j=0; j < block_count; j++)
+        free(blocks[j]);
+    free(blocks);
 }

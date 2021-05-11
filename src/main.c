@@ -119,30 +119,17 @@ int parse_args(int argc, char* argv[], args_t* args)
 	return EXIT_SUCCESS;
 }
 
-// LO QUE ENTENDÍ DEL ALGORITMO LEYENDO EL PAPER:
-// Tomo el binario de mi imagen original y cada k bytes formo un nuevo bloque Bj
-// Usando los k bytes de ese bloque Bj, armo un polinomio de grado k-1 llamado F(x)		(No me queda claro si hay un F(x) por cada Bj o hay uno solo)
-// Para cada imagen camuflaje, la separo en bloques de 2x2 XWVU 				(tantos bloques como la cantidad de Bj que tenía la original, CREO??)
-// Se calcula F(X) en cada bloque y se reparten los bits del resultado entre W, V y U, pisando los valores originales.
-// Para descifrar, tomo los bits "nuevos" de cada bloque, y recupero F(X) de ese bloque.
-// Si tomo el mismo bloque para todas las imágenes, obtengo n puntos F(X) que permiten interpolar el polinomio, y recuperar el dato original
 int main(int argc, char* argv[])
 {
 	args_t args;
 	if(parse_args(argc, argv, &args) != EXIT_SUCCESS)
 	{
 		if(args.image.file != NULL && args.selected_mode == DISTRIBUTE)
-		{
 			free(args.image.file);
-		}
 		if(args.dir != NULL)
-		{
 			closedir(args.dir);
-		}
 		if(args.pictures != NULL)
-		{
 			free_picture_album(args.pictures, args.n);
-		}
 		return EXIT_FAILURE;
 	}
 	load_multiplication_table();
@@ -154,11 +141,10 @@ int main(int argc, char* argv[])
 		printf("\n");
 	}
 	// These are the camouflage pictures
-	printf("These are the camouflage pictures located in %s\n", args.dir_name);
 	for(int i = 0; i < args.n; i++)
 	{
-		print_picture(args.pictures[i]);
-		printf("\n");
+		uint8_t** blocks = get_xwvu_blocks(args.pictures[i], args.k);
+		free_xwvu_blocks(blocks, args.pictures[i], args.k);
 	}
 
 	// CLEANUP

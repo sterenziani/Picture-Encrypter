@@ -19,5 +19,7 @@ int collect_images(DIR* FD, char* dir_name, int k, image_t** pics);
 void free_picture_album(image_t* pictures, int size);
 void save_file(image_t image);
 uint8_t** get_secret_blocks(image_t image, int k);
+uint8_t** get_xwvu_blocks(image_t image, int k);
+void free_xwvu_blocks(uint8_t** blocks, image_t image, int k);
 
 #endif
