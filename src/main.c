@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include "image.h"
+#include "galois.h"
 
 enum mode{DISTRIBUTE, RECOVER};
 typedef struct args{
@@ -144,6 +145,7 @@ int main(int argc, char* argv[])
 		}
 		return EXIT_FAILURE;
 	}
+	load_multiplication_table();
 	if(args.selected_mode == DISTRIBUTE)
 	{
 		// This is the extracted picture
@@ -163,5 +165,6 @@ int main(int argc, char* argv[])
 	free_picture_album(args.pictures, args.n);
 	free(args.image.file);
 	closedir(args.dir);
+	free_multiplication_table();
 	return EXIT_SUCCESS;
 }
