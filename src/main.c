@@ -147,6 +147,22 @@ int main(int argc, char* argv[])
 		free_xwvu_blocks(blocks, args.pictures[i], args.k);
 	}
 
+	// F(x) example
+	uint8_t B[] = {12, 215, 64, 27};
+	uint8_t XWVU[] = {69, 54, 64, 27};
+	printf("Pre-transform XWVU:\n");
+	for(int i=0; i < args.k; i++)
+		printf("%d\t", XWVU[i]);
+	printf("\n");
+	T(XWVU, B, args.k);
+	printf("Post-transform XWVU:\n");
+	for(int i=0; i < args.k; i++)
+		printf("%d\t", XWVU[i]);
+	printf("\n");
+	int number = T_inverse(XWVU);
+	printf("Hidden number is %d\n", F(XWVU[0], B, args.k));
+	printf("Recovered number is %d\n", number);
+
 	// CLEANUP
 	free_picture_album(args.pictures, args.n);
 	free(args.image.file);
