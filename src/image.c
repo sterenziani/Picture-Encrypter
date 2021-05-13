@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <string.h>
 #include "image.h"
+#include "galois.h"
 
 static int file_size(FILE* in, size_t* size)
 {
@@ -70,6 +71,8 @@ image_t load_image(char* filename)
 		// Print whole bitmap, including headers
 		//for(unsigned int i=0; i < size; i++)
 		//	printf("%d\t", file[i]);
+        printf("--- Loading file %s\n", filename);
+        image.filename = filename;
 		image.real_width = read_little_endian_int(file+18);
 		image.height = read_little_endian_int(file+22);
 		image.width = read_little_endian_int(file+34) / image.height;
@@ -84,6 +87,11 @@ image_t load_image(char* filename)
 		image.file = NULL;
 	}
 	return image;
+}
+
+void free_image(image_t image)
+{
+    free(image.filename);
 }
 
 void print_picture(image_t image)
@@ -115,7 +123,10 @@ uint8_t is_file_bmp(char* filename)
 void free_picture_album(image_t* pictures, int size)
 {
     for(int i = 0; i < size; i++)
+    {
 		free(pictures[i].file);
+        free_image(pictures[i]);
+    }
 	free(pictures);
 }
 
@@ -138,7 +149,6 @@ int collect_images(DIR* FD, char* dir_name, int k, image_t** pics)
             if(pictures[image_count].file != NULL)
                 image_count++;
         }
-        free(filename);
     }
     // We have found image_count bitmaps. Let's check they're all the same size.
     if(image_count < k)
@@ -175,7 +185,17 @@ int collect_images(DIR* FD, char* dir_name, int k, image_t** pics)
 
 void save_file(image_t image)
 {
+    printf("--- Saving file %s\n", image.filename);
     FILE* file = fopen(image.filename, "w");
+    fwrite(image.file, sizeof(uint8_t), read_little_endian_int(image.file+2), file);
+    fclose(file);
+}
+
+void save_file_as(image_t image, char* filename)
+{
+    image.filename = filename;
+    printf("--- Saving as file %s\n", filename);
+    FILE* file = fopen(filename, "w");
     fwrite(image.file, sizeof(uint8_t), read_little_endian_int(image.file+2), file);
     fclose(file);
 }
@@ -195,7 +215,17 @@ uint8_t** get_secret_blocks(image_t image, int k)
     return blocks;
 }
 
-uint8_t** get_xwvu_blocks(image_t image, int k)
+void free_secret_blocks(uint8_t** blocks, image_t image, int k)
+{
+    int block_count = (image.height*image.width)/k;
+    for(int j=0; j < block_count; j++)
+    {
+        free(blocks[j]);
+    }
+    free(blocks);
+}
+
+uint8_t** get_image_xwvu_blocks(image_t image, int k)
 {
     int block_count = (image.height*image.width)/k;
     uint8_t** blocks = calloc(block_count, sizeof(uint8_t*));
@@ -213,10 +243,85 @@ uint8_t** get_xwvu_blocks(image_t image, int k)
     return blocks;
 }
 
-void free_xwvu_blocks(uint8_t** blocks, image_t image, int k)
+uint8_t*** get_xwvu_blocks(image_t* images, int k, int n)
+{
+    uint8_t*** album = calloc(n, sizeof(uint8_t*));
+    for(int i=0; i < n; i++)
+    {
+        album[i] = get_image_xwvu_blocks(images[i], k);
+    }
+    return album;
+}
+
+// Adjusts all X values in XWVU album so all Xs within a block set are unique
+void adjust_xwvu_blocks(uint8_t*** album, int block_count, int n)
+{
+    for(int j=0; j < block_count; j++)
+    {
+        for(int i=1; i < n; i++)
+        {
+            for(int index=0; index < i; index++)
+            {
+                if(album[index][j][0] == album[i][j][0])
+                {
+                    album[i][j][0] = (album[i][j][0] + 1) % 256;
+                    index = -1; // Reset cycle to make sure this new value is unique
+                }
+            }
+        }
+    }
+}
+
+// Adjusts XWVU blocks and applies the F(X) transformation to every block
+void transform_xwvu_blocks(uint8_t*** album, uint8_t** polynomials, int block_count, int k, int n)
+{
+    adjust_xwvu_blocks(album, block_count, n);
+    for(int i=0; i < n; i++)
+    {
+        for(int j=0; j < block_count; j++)
+        {
+            T(album[i][j], polynomials[j], k);
+        }
+    }
+}
+
+void replace_xwvu_blocks_image(image_t image, uint8_t** xwvu, int k)
+{
+    int block_count = (image.height*image.width)/k;
+    for(int j=0; j < block_count; j++)
+    {
+        int x = (2*j % image.width);
+        int y = 2 * (2*j / image.width);
+        int X_block = (image.height-1)*image.width + x - y*image.width;
+        image.content[X_block] = xwvu[j][0];
+        image.content[X_block + 1] = xwvu[j][1];
+        image.content[X_block - image.width] = xwvu[j][2];
+        image.content[X_block - image.width + 1] = xwvu[j][3];
+    }
+}
+
+void replace_xwvu_blocks(uint8_t*** album, image_t* pictures, int k, int n)
+{
+    for(int i=0; i < n; i++)
+        replace_xwvu_blocks_image(pictures[i], album[i], k);
+}
+
+void free_image_xwvu_blocks(uint8_t** blocks, image_t image, int k)
 {
     int block_count = (image.height*image.width)/k;
     for(int j=0; j < block_count; j++)
         free(blocks[j]);
     free(blocks);
+}
+
+void free_xwvu_blocks(uint8_t*** album, image_t* images, int k, int n)
+{
+    for(int j=0; j < n; j++)
+        free_image_xwvu_blocks(album[j], images[j], k);
+    free(album);
+}
+
+uint8_t** recover_points()
+{
+
 }

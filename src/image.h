@@ -14,12 +14,18 @@ typedef struct {
 } image_t;
 
 image_t load_image(char* filename);
+void free_image(image_t image);
 void print_picture(image_t image);
 int collect_images(DIR* FD, char* dir_name, int k, image_t** pics);
 void free_picture_album(image_t* pictures, int size);
 void save_file(image_t image);
+void save_file_as(image_t image, char* filename);
 uint8_t** get_secret_blocks(image_t image, int k);
-uint8_t** get_xwvu_blocks(image_t image, int k);
-void free_xwvu_blocks(uint8_t** blocks, image_t image, int k);
+void free_secret_blocks(uint8_t** blocks, image_t image, int k);
+
+uint8_t*** get_xwvu_blocks(image_t* images, int k, int n);
+void transform_xwvu_blocks(uint8_t*** album, uint8_t** polynomials, int block_count, int k, int n);
+void replace_xwvu_blocks(uint8_t*** album, image_t* pictures, int k, int n);
+void free_xwvu_blocks(uint8_t*** album, image_t* images, int k, int n);
 
 #endif

@@ -49,7 +49,6 @@ int parse_args(int argc, char* argv[], args_t* args)
 	switch (args->selected_mode)
 	{
 		case DISTRIBUTE:
-			printf("Loading file %s\n", argv[2]);
 			args->image = load_image(argv[2]);
 			if(args->image.file == NULL)
 			{
@@ -135,33 +134,20 @@ int main(int argc, char* argv[])
 	load_multiplication_table();
 	if(args.selected_mode == DISTRIBUTE)
 	{
-		// This is the extracted picture
-		printf("Picture is %d x %d pixels, rounded up to %d x %d\n", args.image.real_width, args.image.height, args.image.width, args.image.height);
-		print_picture(args.image);
-		printf("\n");
+		int block_count = (args.image.height*args.image.width)/args.k;
+		uint8_t** B = get_secret_blocks(args.image, args.k);
+		uint8_t*** xwvu_album = get_xwvu_blocks(args.pictures, args.k, args.n);
+		transform_xwvu_blocks(xwvu_album, B, block_count, args.k, args.n);
+		replace_xwvu_blocks(xwvu_album, args.pictures, args.k, args.n);
+		for(int i=0; i < args.n; i++)
+			save_file(args.pictures[i]);
+		free_secret_blocks(B, args.image, args.k);
+		free_xwvu_blocks(xwvu_album, args.pictures, args.k, args.n);
 	}
-	// These are the camouflage pictures
-	for(int i = 0; i < args.n; i++)
+	else
 	{
-		uint8_t** blocks = get_xwvu_blocks(args.pictures[i], args.k);
-		free_xwvu_blocks(blocks, args.pictures[i], args.k);
+		
 	}
-
-	// F(x) example
-	uint8_t B[] = {12, 215, 64, 27};
-	uint8_t XWVU[] = {69, 54, 64, 27};
-	printf("Pre-transform XWVU:\n");
-	for(int i=0; i < args.k; i++)
-		printf("%d\t", XWVU[i]);
-	printf("\n");
-	T(XWVU, B, args.k);
-	printf("Post-transform XWVU:\n");
-	for(int i=0; i < args.k; i++)
-		printf("%d\t", XWVU[i]);
-	printf("\n");
-	int number = T_inverse(XWVU);
-	printf("Hidden number is %d\n", F(XWVU[0], B, args.k));
-	printf("Recovered number is %d\n", number);
 
 	// CLEANUP
 	free_picture_album(args.pictures, args.n);
