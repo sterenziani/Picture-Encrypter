@@ -3,7 +3,7 @@ all: compiler
 
 compiler:
 	cd src; \
-	gcc -o ../ss *.c;
+	gcc -g -o ../ss *.c;
 
 .PHONY: clean
 clean:

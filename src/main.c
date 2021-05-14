@@ -132,9 +132,10 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 	load_multiplication_table();
+	int block_count;
 	if(args.selected_mode == DISTRIBUTE)
 	{
-		int block_count = (args.image.height*args.image.width)/args.k;
+		block_count = (args.image.height*args.image.width)/args.k;
 		uint8_t** B = get_secret_blocks(args.image, args.k);
 		uint8_t*** xwvu_album = get_xwvu_blocks(args.pictures, args.k, args.n);
 		transform_xwvu_blocks(xwvu_album, B, block_count, args.k, args.n);
@@ -146,7 +147,19 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		
+		block_count = (args.pictures[0].height*args.pictures[0].width)/args.k;
+		uint8_t** points = recover_points(args.pictures, args.k, args.n);
+		for(int j=0; j < block_count; j++)
+		{
+			printf("\nBloque %d\n", j);
+			for(int i=0; i < args.n; i++)
+			{
+				printf("%x\t", points[j][i]);
+			}
+			printf("\n");
+		}
+		// TODO: Use points[j] to calculate original polynomial of each block
+		free_points(points, block_count);
 	}
 
 	// CLEANUP
