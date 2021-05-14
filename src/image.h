@@ -27,7 +27,7 @@ uint8_t*** get_xwvu_blocks(image_t* images, int k, int n);
 void transform_xwvu_blocks(uint8_t*** album, uint8_t** polynomials, int block_count, int k, int n);
 void replace_xwvu_blocks(uint8_t*** album, image_t* pictures, int k, int n);
 void free_xwvu_blocks(uint8_t*** album, image_t* images, int k, int n);
-uint8_t** recover_points(image_t* images, int k, int n);
+uint8_t** recover_points(image_t* images, int k, int n, int dim);
 void free_points(uint8_t** points, int block_count);
 
 #endif

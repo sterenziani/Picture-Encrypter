@@ -148,18 +148,11 @@ int main(int argc, char* argv[])
 	else
 	{
 		block_count = (args.pictures[0].height*args.pictures[0].width)/args.k;
-		uint8_t** points = recover_points(args.pictures, args.k, args.n);
-		for(int j=0; j < block_count; j++)
-		{
-			printf("\nBloque %d\n", j);
-			for(int i=0; i < args.n; i++)
-			{
-				printf("%x\t", points[j][i]);
-			}
-			printf("\n");
-		}
+		uint8_t** points_X = recover_points(args.pictures, args.k, args.n, 0);
+		uint8_t** points_Y = recover_points(args.pictures, args.k, args.n, 1);
 		// TODO: Use points[j] to calculate original polynomial of each block
-		free_points(points, block_count);
+		free_points(points_X, block_count);
+		free_points(points_Y, block_count);
 	}
 
 	// CLEANUP

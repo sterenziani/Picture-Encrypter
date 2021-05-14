@@ -322,8 +322,11 @@ void free_xwvu_blocks(uint8_t*** album, image_t* images, int k, int n)
 }
 
 // Returns points[block][image]
-uint8_t** recover_points(image_t* images, int k, int n)
+// Use dim=0 if you want values for X
+// Use dim=1 if you want values for Y
+uint8_t** recover_points(image_t* images, int k, int n, int dim)
 {
+    dim = dim % 2;
     uint8_t*** album = get_xwvu_blocks(images, k, n);
     int block_count = (images[0].height*images[0].width)/k;
     uint8_t** points = calloc(block_count, sizeof(uint8_t*));
@@ -332,13 +335,19 @@ uint8_t** recover_points(image_t* images, int k, int n)
         points[j] = calloc(n, sizeof(uint8_t));
         for(int i=0; i < n; i++)
         {
-            int value = T_inverse(album[i][j]);
-            if(value < 0)
+            int value;
+            if(dim == 0)
+                value = album[i][j][0];
+            else
             {
-                for(int a=0; a <=j; a++)
-                    free(points[a]);
-                free(points);
-                return NULL;
+                value = T_inverse(album[i][j]);
+                if(value < 0)
+                {
+                    for(int a=0; a <=j; a++)
+                        free(points[a]);
+                    free(points);
+                    return NULL;
+                }
             }
             points[j][i] = (uint8_t) value;
         }
