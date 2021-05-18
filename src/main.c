@@ -150,9 +150,12 @@ int main(int argc, char* argv[])
 		block_count = (args.pictures[0].height*args.pictures[0].width)/args.k;
 		uint8_t** points_X = recover_points(args.pictures, args.k, args.n, 0);
 		uint8_t** points_Y = recover_points(args.pictures, args.k, args.n, 1);
-		// TODO: Use points[j] to calculate original polynomial of each block
+		//TODO: agregar random a lagrange para q agarre distintos puntos
+		uint8_t** polynomials = lagrange_interpolation(args.k, block_count, points_X, points_Y);
+		//TODO: Reconstruir imagen
 		free_points(points_X, block_count);
 		free_points(points_Y, block_count);
+		free_points(polynomials, block_count);
 	}
 
 	// CLEANUP

@@ -356,6 +356,52 @@ uint8_t** recover_points(image_t* images, int k, int n, int dim)
     return points;
 }
 
+uint8_t ** lagrange_interpolation(int k, int block_count, uint8_t** Xs, uint8_t** Ys) {
+    uint8_t** polynomials = calloc(block_count, sizeof(uint8_t*));
+
+    for(int block=0; block < block_count; block++) {
+        
+        polynomials[block] = calloc(k, sizeof(uint8_t));
+        for(int m = 0; m<k; m++) {
+            polynomials[block][m] = 0;
+        }
+
+        for(int i = 0; i<k; i++){
+            uint8_t poli[k];
+            uint8_t det = 1;
+            int n = 0;
+
+            for (int j = 0; j<k; j++){
+                if(i != j){
+                    det = galois_multiply(det,galois_sum(Xs[block][i], Xs[block][j]));
+                    
+                    if (n == 0) {
+                        poli[0] = galois_multiply(Xs[block][j], Ys[block][i]);
+                        poli[1] =  Ys[block][i];
+                    }
+
+                    else {
+                        for(int m=n; m>=0; m--) {
+                            poli[m+1] = poli[m];
+                        }
+                        poli[0] = galois_multiply(poli[0], Xs[block][j]);
+                        for(int m=1; m<=n; m++) {
+                            poli[m] = galois_sum(poli[m], galois_multiply(poli[m+1], Xs[block][j]));
+                        }
+                    }
+                    n++;
+                }
+
+            }
+            for(int m = 0; m<k; m++) {
+                polynomials[block][m] = galois_sum(polynomials[block][m], galois_divide(poli[m],det));
+            }
+
+        }
+    }
+    return polynomials;
+}
+
 void free_points(uint8_t** points, int block_count)
 {
     for(int j=0; j < block_count; j++)
