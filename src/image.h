@@ -29,6 +29,7 @@ void replace_xwvu_blocks(uint8_t*** album, image_t* pictures, int k, int n);
 void free_xwvu_blocks(uint8_t*** album, image_t* images, int k, int n);
 uint8_t** recover_points(image_t* images, int k, int n, int dim);
 uint8_t ** lagrange_interpolation(int k, int block_count, uint8_t** Xs, uint8_t** Ys);
+void recover_image(image_t img, char* filename, uint8_t**polynomials, int k, int block_count);
 void free_points(uint8_t** points, int block_count);
 
 #endif

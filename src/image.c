@@ -402,6 +402,15 @@ uint8_t ** lagrange_interpolation(int k, int block_count, uint8_t** Xs, uint8_t*
     return polynomials;
 }
 
+void recover_image(image_t img, char* filename, uint8_t**polynomials, int k, int block_count) {
+    for(int i =0; i<block_count; i++){
+        for(int j =0; j<k; j++){
+            img.content[i*k+j] = polynomials[i][j];
+        }
+    }
+    save_file_as(img, filename);
+}
+
 void free_points(uint8_t** points, int block_count)
 {
     for(int j=0; j < block_count; j++)

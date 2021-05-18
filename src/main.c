@@ -16,6 +16,7 @@ typedef struct args{
 	char* dir_name;
 	DIR* dir;
 	image_t* pictures;
+	char* filename;
 } args_t;
 
 int parse_args(int argc, char* argv[], args_t* args)
@@ -46,10 +47,12 @@ int parse_args(int argc, char* argv[], args_t* args)
 
 	// ARG 2 - Original image file (Input if d, Output if r)
 	FILE* file;
+	args->filename = argv[2];
+
 	switch (args->selected_mode)
 	{
 		case DISTRIBUTE:
-			args->image = load_image(argv[2]);
+			args->image = load_image(args->filename);
 			if(args->image.file == NULL)
 			{
 				fprintf(stderr, "ERROR. Image does not exist or is not compatible with this program.\n");
@@ -57,9 +60,9 @@ int parse_args(int argc, char* argv[], args_t* args)
 			}
 			break;
 		case RECOVER:
-		    if(file = fopen(argv[2], "r"))
+		    if(file = fopen(args->filename, "r"))
 		    {
-				fprintf(stderr, "ERROR. File %s already exists. Please choose another filename to avoid overwriting it!\n", argv[2]);
+				fprintf(stderr, "ERROR. File %s already exists. Please choose another filename to avoid overwriting it!\n", args->filename);
 		        fclose(file);
 				return EXIT_FAILURE;
 		    }
@@ -152,7 +155,7 @@ int main(int argc, char* argv[])
 		uint8_t** points_Y = recover_points(args.pictures, args.k, args.n, 1);
 		//TODO: agregar random a lagrange para q agarre distintos puntos
 		uint8_t** polynomials = lagrange_interpolation(args.k, block_count, points_X, points_Y);
-		//TODO: Reconstruir imagen
+		recover_image(args.pictures[0], args.filename, polynomials, args.k, block_count);
 		free_points(points_X, block_count);
 		free_points(points_Y, block_count);
 		free_points(polynomials, block_count);
