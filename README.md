@@ -34,6 +34,10 @@ In the project's folder:
 
 ## Example runs
 
-Being camouflage a valid directory with pictures of size 300x300, such as Alfred's
+If camouflage is a valid directory with pictures of size 300x300, such as Alfred's
 
 - ./ss d img/Alfred.bmp 4 camouflage
+
+If the directory camouflage contains at least 5 camouflage pictures of a picture encrypted with k=5:
+
+- ./ss r recovered.bmp 5 camouflage
