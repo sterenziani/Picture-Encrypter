@@ -68,7 +68,6 @@ int parse_args(int argc, char* argv[], args_t* args)
 		    }
 			break;
 		default:
-			printf("You shouldn't be here. How did you get here?!\n");
 			return EXIT_FAILURE;
 	}
 

@@ -68,10 +68,7 @@ image_t load_image(char* filename)
     		image.file = NULL;
             return image;
         }
-		// Print whole bitmap, including headers
-		//for(unsigned int i=0; i < size; i++)
-		//	printf("%d\t", file[i]);
-        printf("--- Loading file %s\n", filename);
+        //printf("--- Loading file %s\n", filename);
         image.filename = filename;
 		image.real_width = read_little_endian_int(file+18);
 		image.height = read_little_endian_int(file+22);
@@ -185,7 +182,7 @@ int collect_images(DIR* FD, char* dir_name, int k, image_t** pics)
 
 void save_file(image_t image)
 {
-    printf("--- Saving file %s\n", image.filename);
+    //printf("--- Saving file %s\n", image.filename);
     FILE* file = fopen(image.filename, "w");
     fwrite(image.file, sizeof(uint8_t), read_little_endian_int(image.file+2), file);
     fclose(file);
@@ -194,7 +191,7 @@ void save_file(image_t image)
 void save_file_as(image_t image, char* filename)
 {
     image.filename = filename;
-    printf("--- Saving as file %s\n", filename);
+    //printf("--- Saving as file %s\n", filename);
     FILE* file = fopen(filename, "w");
     fwrite(image.file, sizeof(uint8_t), read_little_endian_int(image.file+2), file);
     fclose(file);
