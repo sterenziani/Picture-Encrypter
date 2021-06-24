@@ -18,7 +18,7 @@
 - Third Argument (a3):
   - Amount of shadows (k)
   - Integer between 4 and 6
-  - Image file pixels should be divisible by k
+  - Image's (width x height) should be divisible by k
 - Fourth Argument (a4):
   - Shadow Realm (directory)
   - For all pictures in the Shadow Realm
@@ -27,17 +27,17 @@
 
 ## To run the code
 
-In the project's folder:
+In the project's folder, run the following commands:
 
 - make all
 - ./ss a1 a2 a3 a4
 
 ## Example runs
 
-If camouflage is a valid directory with pictures of size 300x300, such as Alfred's
+If camouflage is a valid directory with pictures of dimensions 300x300, just like Alfred.bmp:
 
 - ./ss d img/Alfred.bmp 4 camouflage
 
-If the directory camouflage contains at least 5 camouflage pictures of a picture encrypted with k=5:
+If the directory *camouflage* contains at least 5 shadows of a picture encrypted with k=5:
 
 - ./ss r recovered.bmp 5 camouflage
